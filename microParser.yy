@@ -448,32 +448,32 @@ write_stmt:		TOKEN_WRITE TOKEN_OP_LP id_list TOKEN_OP_RP TOKEN_OP_SEMIC{		/*Writ
 				}
 };
 
-return_stmt:	TOKEN_RETURN expr TOKEN_OP_SEMIC{
+return_stmt:	TOKEN_RETURN expr TOKEN_OP_SEMIC{	/*Returns the status of execution*/
 				//need to store the expr onto stack
-				std::string return_name = "";
+				std::string return_name = "";		/*Initialization of empty return name,datatype,dstination*/
 				std::string data_type = "";
 				std::string dest = "";
-				if ($2->get_node_type() == name_value){
-					return_name = $2->get_name();
+				if ($2->get_node_type() == name_value){		/*If node type is name_value,*/
+					return_name = $2->get_name();	/*Set return name as the identity of that node*/
 				}
 				else{
-					std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));
-					return_name = temp_name + temp_counter_str;
+					std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));	/*Store temp counter as string*/
+					return_name = temp_name + temp_counter_str;		/*concatenate name and counter*/
 				}
-				if ($2->get_int_or_float()){
-					data_type = "STOREI";
+				if ($2->get_int_or_float()){	/*If int then true*/
+					data_type = "STOREI";	/*Set data type as Store int*/
 				}
 				else{
-					data_type = "STOREF";
+					data_type = "STOREF";	/*Set data type as Store float*/
 				}
-				std::string param_counter_str = std::to_string(static_cast<long long>(param_counter+1));
-				dest = stack_sign + param_counter_str;
-				std::IR_code * ret_addr = new IR_code(data_type, return_name, "", dest, temp_counter);
-				IR_vector.push_back(ret_addr);
-				std::IR_code * unlink_code = new IR_code("UNLINK", "", "", "", temp_counter);
-				IR_vector.push_back(unlink_code);
-				std::IR_code * return_code = new IR_code("RET", "", "", "", temp_counter);
-				IR_vector.push_back(return_code);
+				std::string param_counter_str = std::to_string(static_cast<long long>(param_counter+1));	/*increasing the parameter counter*/
+				dest = stack_sign + param_counter_str;	/*initial + counter will point to destination to address*/
+				std::IR_code * ret_addr = new IR_code(data_type, return_name, "", dest, temp_counter);	/*creating new IR node with dest address as return node*/
+				IR_vector.push_back(ret_addr);	/*push return address into vector*/
+				std::IR_code * unlink_code = new IR_code("UNLINK", "", "", "", temp_counter);	/*creating new IR node with temp counter as unlink node*/
+				IR_vector.push_back(unlink_code);	/*push unlink code into vector*/
+				std::IR_code * return_code = new IR_code("RET", "", "", "", temp_counter);	/*creating new IR node with data type RET as return node*/
+				IR_vector.push_back(return_code);	/*push return code into vector*/
 };
 
 expr:			expr_prefix factor{
