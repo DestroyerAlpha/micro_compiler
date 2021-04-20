@@ -1094,57 +1094,77 @@ compop:			TOKEN_OP_LESS{$$ = TOKEN_OP_LESS; // assignment operation for given op
 			|	TOKEN_OP_GE{$$ = TOKEN_OP_GE; // assignment operation for given operand};
 
 init_stmt:		assign_expr{
+							//Check if both sides of the assignment statement have same type
 							if(($1->get_right_node())->get_int_or_float() == ($1->get_left_node())->get_int_or_float()){
+								//If the assignment is of INT type
 								if(($1->get_right_node())->get_int_or_float() == true){
-								//cout << "assign to int" <<endl;
+									//Create a temp to store the assigned value
 									std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));
 									std::string s = temp_name + temp_counter_str;
+									//If ASTNode for the value being assigned is of name_value type, get it's name
 									if(($1->get_right_node())->get_node_type() == name_value){
 										s = ($1->get_right_node())->get_name();
 									}
+									//Create IR Code for the assignment statement, storing right node in the left
 									std::IR_code * assign_int = new IR_code("STOREI", s, "", (($1->get_left_node())->get_name()), temp_counter);
+									//Add the IR Code to the IR Code vector
 									IR_vector.push_back(assign_int);
 								}
+								//If the assignment is of FLOAT type
 								else if(($1->get_right_node())->get_int_or_float() == false){
+									//Create a temp to store the assigned value
 									std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));
 									std::string s = temp_name + temp_counter_str;
+									//If ASTNode for the value being assigned is of name_value type, get it's name
 									if(($1->get_right_node())->get_node_type() == name_value){
 										s = ($1->get_right_node())->get_name();
 									}
+									//Create IR Code for the assignment statement, storing right node in the left
 									std::IR_code * assign_float = new IR_code("STOREF", s, "", (($1->get_left_node())->get_name()), temp_counter);
+									//Add the IR Code to the IR Code vector
 									IR_vector.push_back(assign_float);
 								}
 							}
 							else{
-								//assign type error
+								//Cannot assign different types
 							}
 }
 			|	;
 
 incr_stmt:		assign_expr{
+							//Check if both sides of the assignment statement have same type
 							if(($1->get_right_node())->get_int_or_float() == ($1->get_left_node())->get_int_or_float()){
+								//If the assignment is of INT type
 								if(($1->get_right_node())->get_int_or_float() == true){
-								//cout << "assign to int" <<endl;
+								//Create a temp to store the assigned value
 									std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));
 									std::string s = temp_name + temp_counter_str;
+									//If ASTNode for the value being assigned is of name_value type, get it's name
 									if(($1->get_right_node())->get_node_type() == name_value){
 										s = ($1->get_right_node())->get_name();
 									}
+									//Create IR Code for the assignment statement, storing right node in the left
 									std::IR_code * assign_int = new IR_code("STOREI", s, "", (($1->get_left_node())->get_name()), temp_counter);
+									//Add the IR Code to the IR Code vector
 									IR_vector.push_back(assign_int);
 								}
+								//If the assignment is of FLOAT type
 								else if(($1->get_right_node())->get_int_or_float() == false){
+									//Create a temp to store the assigned value
 									std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));
 									std::string s = temp_name + temp_counter_str;
+									//If ASTNode for the value being assigned is of name_value type, get it's name
 									if(($1->get_right_node())->get_node_type() == name_value){
 										s = ($1->get_right_node())->get_name();
 									}
+									//Create IR Code for the assignment statement, storing right node in the left
 									std::IR_code * assign_float = new IR_code("STOREF", s, "", (($1->get_left_node())->get_name()), temp_counter);
+									//Add the IR Code to the IR Code vector
 									IR_vector.push_back(assign_float);
 								}
 							}
 							else{
-								//assign type error
+								//Cannot Assign different Types
 							}
 }
 			|	;
@@ -1156,27 +1176,46 @@ for_stmt:		TOKEN_FOR{//add for block
 							SymTabHead.push_back(for_blockScope);*/
 
 } TOKEN_OP_LP init_stmt TOKEN_OP_SEMIC{
+										//Increment Label number by 2 as we need one label for "FOR START" and one for "FOR END"
+										//Let the labels be named L1 and L2
 										label_num = label_num + 2;
+										//Add the label to the label stack
 										label_counter.push(label_num);
+										//Use L1 for marking the start of the loop, create a string fr it
 										std::string label_counter_str = std::to_string(static_cast<long long>(label_counter.top() - 1));
 										std::string label_s = lable_name + label_counter_str;
+										//Create IR Code for the label
 										std::IR_code * label_IR = new IR_code("LABEL", "", "", label_s, temp_counter);
+										//Add IR Code to the IR Code vector
 										IR_vector.push_back(label_IR);
+										//Create IR Code for  start of FOR LOOP
 										std::IR_code * label_for = new IR_code("FOR_START", "", "", "", temp_counter);
+										//Add the IR Code to the IR Code vector
 										IR_vector.push_back(label_for);
 } cond TOKEN_OP_SEMIC{/*start for the incr_stmt*/
+														//Create IR code which marks the beginning of the incr statement, (Useful for continue)
 															std::IR_code * incr = new IR_code("INCR_START", "", "", "", temp_counter);
+															//Add IR Code to the IR Code vector
 															IR_vector.push_back(incr);
-						} incr_stmt{/*end for the incr_stmt*/
+						} incr_stmt{
+							//Marks the end of the INCR STMT
+									//Create IR code which marks the end of the incr stmt
 									std::IR_code * jump_code = new IR_code("INCR_END", "", "", "", temp_counter);
+									//Add the IR Code to the IR Code vector
 									IR_vector.push_back(jump_code);
-						} TOKEN_OP_RP decl stmt_list{/*end of the for loop*/
+						} TOKEN_OP_RP decl stmt_list{
+														//Create IR Code which marks the end of the FOR LOOP
 														std::IR_code * end_sig = new IR_code("FOR_END", "", "", "", label_counter.top());
+														//Add the IR code to the IR Code vector
 														IR_vector.push_back(end_sig);
+														//Create label L2
 														std::string end_label = std::to_string(static_cast<long long>(label_counter.top()));
 														std::string end_lable_s = lable_name + end_label;
+														//Add IR Code for label L2
 														std::IR_code * end_code = new IR_code("LABEL", "", "", end_lable_s, temp_counter);
+														//Add IR Code to the IR Code vector
 														IR_vector.push_back(end_code);
+														//Remove the label from the stack....Label number can be reused
 														label_counter.pop();
 						} TOKEN_ROF{};
 
