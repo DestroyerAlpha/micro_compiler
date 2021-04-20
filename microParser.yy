@@ -315,83 +315,82 @@ base_stmt:	assign_stmt{}
 		|	write_stmt{}
 		|	return_stmt{};
 
-assign_stmt:	assign_expr TOKEN_OP_SEMIC{/*print the 3 address code to vector*/
-											if(($1->get_right_node())->get_int_or_float() == ($1->get_left_node())->get_int_or_float()){
-												if(($1->get_right_node())->get_int_or_float() == true){
-												//cout << "assign to int" <<endl;
-													std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));
-													std::string s = temp_name + temp_counter_str;
-													if(($1->get_right_node())->get_node_type() == name_value){
-														s = ($1->get_right_node())->get_name();
-													}
-													std::IR_code * assign_int = new IR_code("STOREI", s, "", (($1->get_left_node())->get_name()), temp_counter);
-													IR_vector.push_back(assign_int);
-												}
-												else if(($1->get_right_node())->get_int_or_float() == false){
-													std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));
-													std::string s = temp_name + temp_counter_str;
-													if(($1->get_right_node())->get_node_type() == name_value){
-														s = ($1->get_right_node())->get_name();
-													}
-													std::IR_code * assign_float = new IR_code("STOREF", s, "", (($1->get_left_node())->get_name()), temp_counter);
-													IR_vector.push_back(assign_float);
-												}
-											}
-											else{
-												//assign type error
-											}
+assign_stmt:	assign_expr TOKEN_OP_SEMIC{																/*print the 3 address code to vector*/
+					if(($1->get_right_node())->get_int_or_float() == ($1->get_left_node())->get_int_or_float()){	/*This will return bool value whether it is int or float*/
+						if(($1->get_right_node())->get_int_or_float() == true){		/*assign int value*/
+							std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));	/*Convert to string*/
+							std::string s = temp_name + temp_counter_str;											/*concatenate string*/
+							if(($1->get_right_node())->get_node_type() == name_value){								/*if node type is name_value*/
+								s = ($1->get_right_node())->get_name();												/*s is assigned it's name*/
+							}
+							std::IR_code * assign_int = new IR_code("STOREI", s, "", (($1->get_left_node())->get_name()), temp_counter);	/*
+							assign new IR Node*/
+							IR_vector.push_back(assign_int);	/*Push that IRnode in Vector*/
+						}
+						else if(($1->get_right_node())->get_int_or_float() == false){	/*assign float value*/
+							std::string temp_counter_str = std::to_string(static_cast<long long>(temp_counter));	/*Convert to string*/
+							std::string s = temp_name + temp_counter_str;											/*concatenate string*/
+							if(($1->get_right_node())->get_node_type() == name_value){								/*if node type is name_value*/
+								s = ($1->get_right_node())->get_name();												/*s is assigned it's name*/
+							}
+							std::IR_code * assign_float = new IR_code("STOREF", s, "", (($1->get_left_node())->get_name()), temp_counter);	/*
+							assign new IR Node*/
+							IR_vector.push_back(assign_float);	/*Push that IR_node in Vector*/
+						}
+					}
+					else{
+						//assign type error
+					}
 	};
 
-assign_expr:	id TOKEN_OP_NE expr{
-									std::ASTNode * assign_node = new ASTNode();
-									assign_node->change_node_type(operator_value);
-									assign_node->change_operation_type(TOKEN_OP_NE);
+assign_expr:	id TOKEN_OP_NE expr{			/*Set the assigned Expr Node*/
+									std::ASTNode * assign_node = new ASTNode();	/*create assign node*/
+									assign_node->change_node_type(operator_value);	/*assign its node type*/
+									assign_node->change_operation_type(TOKEN_OP_NE);	/*Assign operation type*/
 									//create the id node
-									std::ASTNode * id_node = new ASTNode();
-									id_node -> change_node_type(name_value);
-									std::string s = *($1);
+									std::ASTNode * id_node = new ASTNode();	/*Create the id node*/
+									id_node -> change_node_type(name_value);	/*assign its node type*/
+									std::string s = *($1);	/*store its pointer in the string*/
 
 									//id_node -> add_name(*($1));
 									//find out the type of the id by looking up the symbol table need to use for loop later
 									int temp;
-									if (func_var_map[*($1)])
+									if (func_var_map[*($1)])	/*if that variable is present or mapped then,*/
 									{
-										temp = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[*($1)] -> get_type() );
-										id_node -> change_int_or_float(temp == TOKEN_INT);
+										temp = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[*($1)] -> get_type() );	/*get the type of the symbol*/
+										id_node -> change_int_or_float(temp == TOKEN_INT);	/*assign that token type to id_node*/
 
-										int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s] -> get_stack_pointer() );
-										std::string stack_label = std::to_string(static_cast<long long>(stack_num));
-										s = stack_sign + stack_label;
-										id_node -> add_name(s);
+										int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s] -> get_stack_pointer() );	/*get the position*/
+										std::string stack_label = std::to_string(static_cast<long long>(stack_num));	/*get lable from that position*/
+										s = stack_sign + stack_label;	/*concatenate strings*/
+										id_node -> add_name(s);		/*assign the name to id node*/
 									}
-									else{
-										temp = ( (SymTabHead.front()->get_tab())[*($1)] -> get_type() );
-										id_node -> change_int_or_float(temp == TOKEN_INT);
-										id_node -> add_name(s);
+									else{	/*if that variable is absent or not mapped then,*/
+										temp = ( (SymTabHead.front()->get_tab())[*($1)] -> get_type() );	/*get the type of the symbol*/
+										id_node -> change_int_or_float(temp == TOKEN_INT);	/*assign that token type to id_node*/
+										id_node -> add_name(s);		/*add the string *($1)*/
 									}
-									//int temp = ( (SymTabHead.front()->get_tab())[*($1)] -> get_type() );
-									id_node -> change_int_or_float(temp == TOKEN_INT);
-									assign_node -> add_left_child(id_node);
-									assign_node -> add_right_child($3);
-									assign_node->change_int_or_float((temp == TOKEN_INT));
+									id_node -> change_int_or_float(temp == TOKEN_INT);	/*assign that token type to id_node*/
+									assign_node -> add_left_child(id_node);	/*add left child to assign_node*/
+									assign_node -> add_right_child($3);		/*add right child to assign_node*/
+									assign_node->change_int_or_float((temp == TOKEN_INT));	/*assign that token type to assign_node*/
 
 									//set the assign_expr type
-									$$ = assign_node;
+									$$ = assign_node; 	/*Set the assign expr type*/
 };
 
-read_stmt:		TOKEN_READ TOKEN_OP_LP id_list TOKEN_OP_RP TOKEN_OP_SEMIC{
+read_stmt:		TOKEN_READ TOKEN_OP_LP id_list TOKEN_OP_RP TOKEN_OP_SEMIC{	/*print the 3-address read code to vector*/
 				for(int i = ($3->size()) - 1; i >= 0; --i){
 					std::string s_type = "";
-					//need to check the scope use loop later
-					if(func_var_map[*( (*$3)[i] )]){
-						if((SymTabHead[SymTabHead.size() - 1]->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_INT){
-							s_type = "READI";
+					if(func_var_map[*( (*$3)[i] )]){	/*need to check the scope use loop later*/
+						if((SymTabHead[SymTabHead.size() - 1]->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_INT){ /*If symbol type is int*/
+							s_type = "READI";																		/*assign it as read int*/
 						}
-						else if((SymTabHead[SymTabHead.size() - 1]->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_FLOAT){
-							s_type = "READF";
+						else if((SymTabHead[SymTabHead.size() - 1]->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_FLOAT){	/*If symbol type is float*/
+							s_type = "READF";																		/*assign it as read float*/
 						}
 					}
-					else{
+					else{	/*If not defined it will check the type from start*/
 						if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_INT){
 							s_type = "READI";
 						}
@@ -399,68 +398,53 @@ read_stmt:		TOKEN_READ TOKEN_OP_LP id_list TOKEN_OP_RP TOKEN_OP_SEMIC{
 							s_type = "READF";
 						}
 					}
-					/*if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_INT){
-						s_type = "READI";
-					}
-					else if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_FLOAT){
-						s_type = "READF";
-					}*/
-					std::string s = *( (*$3)[i] );
-					if (func_var_map[s])
+					std::string s = *( (*$3)[i] );	/*store that into a string*/
+					if (func_var_map[s])	/*check whether it is mapped or not*/
 					{
-						int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s] -> get_stack_pointer() );
-						std::string stack_label = std::to_string(static_cast<long long>(stack_num));
-						s = stack_sign + stack_label;
+						int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s] -> get_stack_pointer() );	/*get the position*/
+						std::string stack_label = std::to_string(static_cast<long long>(stack_num));		/*get the label from that position*/
+						s = stack_sign + stack_label;	/*concatenate the strings*/
 					}
-					std::IR_code * read_code = new IR_code(s_type, "", "", s, temp_counter);
-					IR_vector.push_back(read_code);
+					std::IR_code * read_code = new IR_code(s_type, "", "", s, temp_counter);	/*ceate ner IR code as read code*/
+					IR_vector.push_back(read_code);												/* Push that read code into the vector*/
 				}
 };
 
-write_stmt:		TOKEN_WRITE TOKEN_OP_LP id_list TOKEN_OP_RP TOKEN_OP_SEMIC{
+write_stmt:		TOKEN_WRITE TOKEN_OP_LP id_list TOKEN_OP_RP TOKEN_OP_SEMIC{		/*Write the 3-address code and store it in vector*/
 				for(int i = ($3->size()) - 1; i >= 0; --i){
-					std::string s_type = "";
+					std::string s_type = "";	/*Initialized empty string*/
 					//need to check the scope use loop later
 					if(func_var_map[*( (*$3)[i] )]){
 						if((SymTabHead[SymTabHead.size() - 1]->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_INT){
-							s_type = "WRITEI";
+							s_type = "WRITEI";	/*If token type is int then set op type is Write int*/
 						}
 						else if((SymTabHead[SymTabHead.size() - 1]->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_FLOAT){
-							s_type = "WRITEF";
+							s_type = "WRITEF";	/*If token type is float then set op type is Write float*/
 						}
 						else if((SymTabHead[SymTabHead.size() - 1]->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_STRING){
-							s_type = "WRITES";
+							s_type = "WRITES";	/*If token type is string then set op type is Write string*/
 						}
 					}
 					else{
 						if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_INT){
-							s_type = "WRITEI";
+							s_type = "WRITEI";	/*If token type is int then set op type is Write int*/
 						}
 						else if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_FLOAT){
-							s_type = "WRITEF";
+							s_type = "WRITEF";	/*If token type is float then set op type is Write float*/
 						}
 						else if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_STRING){
-							s_type = "WRITES";
+							s_type = "WRITES";	/*If token type is string then set op type is Write string*/
 						}
 					}
-					/*if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_INT){
-						s_type = "WRITEI";
-					}
-					else if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_FLOAT){
-						s_type = "WRITEF";
-					}
-					else if((SymTabHead.front()->get_tab())[*( (*$3)[i] )] -> get_type() == TOKEN_STRING){
-						s_type = "WRITES";
-					}*/
-					std::string s = *( (*$3)[i] );
+					std::string s = *( (*$3)[i] );	/*store the op type */
 					if (func_var_map[s])
 					{
-						int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s] -> get_stack_pointer() );
-						std::string stack_label = std::to_string(static_cast<long long>(stack_num));
-						s = stack_sign + stack_label;
+						int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s] -> get_stack_pointer() );	/*If mapped get location*/
+						std::string stack_label = std::to_string(static_cast<long long>(stack_num));	/*get label from that location*/
+						s = stack_sign + stack_label;		/*concatenate the sign and label*/
 					}
-					std::IR_code * write_code = new IR_code(s_type, s, "", "", temp_counter);
-					IR_vector.push_back(write_code);
+					std::IR_code * write_code = new IR_code(s_type, s, "", "", temp_counter);	/*Create new IR node as write code*/
+					IR_vector.push_back(write_code);	/*push that node ino the vector*/
 				}
 };
 
