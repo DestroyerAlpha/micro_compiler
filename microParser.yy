@@ -808,175 +808,160 @@ factor_prefix:	factor_prefix postfix_expr mulop{
 			|	{$$ = NULL;};
 
 postfix_expr:	primary{$$=$1;}
-			|	call_expr{$$=$1;};
+			|	call_expr{$$=$1;};	/*Call either of this function and pass the variable*/
 
 call_expr:		id TOKEN_OP_LP expr_list TOKEN_OP_RP{
-				std::IR_code * push_code = new IR_code("PUSH", "", "", "", temp_counter);
-				std::IR_code * push_reg = new IR_code("PUSHREG", "", "", "", temp_counter);
+				std::IR_code * push_code = new IR_code("PUSH", "", "", "", temp_counter);	/*Create new IR code with data type as PUSH*/
+				std::IR_code * push_reg = new IR_code("PUSHREG", "", "", "", temp_counter);	/*Create new IR code with data type as PUSHREG*/
 				IR_vector.push_back(push_reg);
-				IR_vector.push_back(push_code);
+				IR_vector.push_back(push_code);												/*push both nodes into vector*/
 				std::string s = "";
-				for (int x = 0; x < $3->size(); x++)
+				for (int x = 0; x < $3->size(); x++)	/*for all expression in the list*/
 				{
-					if ((*$3)[x] -> get_node_type() == name_value)
+					if ((*$3)[x] -> get_node_type() == name_value)	/*if node type of that expression is name value*/
 					{
-						s = (*$3)[x] -> get_name();
+						s = (*$3)[x] -> get_name();	/*store its symbol name*/
 					}
 					else{
-						//int temp_num = (*$3)[x-1] -> get_temp_count();
-						//std::string temp_counter_str = std::to_string(static_cast<long long>(temp_num));
-						s = (*$3)[x] -> get_temp_count();
+						s = (*$3)[x] -> get_temp_count();	/*else store the counter*/
 					}
-					std::IR_code * push_para = new IR_code("PUSH", "", "", s, temp_counter);
-					IR_vector.push_back(push_para);
+					std::IR_code * push_para = new IR_code("PUSH", "", "", s, temp_counter);	/*Create new IR code with data type as PUSH with the name or counter*/
+					IR_vector.push_back(push_para);	/*push that node into vector*/
 				}
 				//need to push the result of expr_list
-				//
-				std::IR_code * jump_func = new IR_code("JSR", "", "", *$1, temp_counter);
-				IR_vector.push_back(jump_func);
-				std::IR_code * pop_code = new IR_code("POP", "", "", "", temp_counter);
-				std::IR_code * pop_reg = new IR_code("POPREG", "", "", "", temp_counter);
+				std::IR_code * jump_func = new IR_code("JSR", "", "", *$1, temp_counter);		/*Create new IR code with data type as JSR with parameter id*/
+				IR_vector.push_back(jump_func);		/*push that node into vector*/
+				std::IR_code * pop_code = new IR_code("POP", "", "", "", temp_counter);		/*Create new IR code with data type as POP*/
+				std::IR_code * pop_reg = new IR_code("POPREG", "", "", "", temp_counter);	/*Create new IR code with data type as POPREG*/
 
-				IR_vector.push_back(pop_code);
-				for (int x = 0; x < $3->size()-1; x++)
+				IR_vector.push_back(pop_code);	/*push that node into vector*/
+				for (int x = 0; x < $3->size()-1; x++)	/*for all expression in the list except last one*/
 				{
-					std::IR_code * pop_para = new IR_code("POP", "", "", "", temp_counter);
-					IR_vector.push_back(pop_para);
+					std::IR_code * pop_para = new IR_code("POP", "", "", "", temp_counter);	/*Create new IR code with data type as POP with the counter*/
+					IR_vector.push_back(pop_para);	/*push that node into vector*/
 				}
-				std::string temp_counter_str = std::to_string(static_cast<long long>(++temp_counter));
-				s = temp_name + temp_counter_str;
-				std::IR_code * pop_ret = new IR_code("POP", "", "", s, temp_counter);
-				IR_vector.push_back(pop_ret);
-				IR_vector.push_back(pop_reg);
-				//need to pop the result of function into an temp
-				//and store the temp into the call_expr node with the type of the function
-				std::ASTNode * caller_node = new ASTNode();
-				caller_node -> change_node_type(name_value);
-				caller_node -> add_name(s);
-				caller_node -> change_int_or_float(func_type_map[*($1)]);
-				$$ = caller_node;
+				std::string temp_counter_str = std::to_string(static_cast<long long>(++temp_counter));	/*increasing the parameter counter*/
+				s = temp_name + temp_counter_str;														/*concatenate name with counter*/
+				std::IR_code * pop_ret = new IR_code("POP", "", "", s, temp_counter);		/*Create new IR code with data type as POP with the counter and with its Tempcounter (eg. T21)*/
+				IR_vector.push_back(pop_ret);		/*push that node into vector*/
+				IR_vector.push_back(pop_reg);		/*push that node into vector*/
+				/*need to pop the result of function into an temp and store the temp into the call_expr node with the type of the function */ 
+				std::ASTNode * caller_node = new ASTNode();		/*Create new object*/
+				caller_node -> change_node_type(name_value);	/*assign node type to it*/
+				caller_node -> add_name(s);						/*assign name to it*/
+				caller_node -> change_int_or_float(func_type_map[*($1)]);	/*assign bool value (int = true; float = false) to it*/
+				$$ = caller_node;	/*define caller node*/ 
 };
 
 expr_list:		expr expr_list_tail{
-				//cout << $1->get_name() << "-------------" <<endl;
-				//std::IR_code * push_code = new IR_code("PUSH", "", "", s, temp_counter);
-				$$ = $2;
-				$$ -> push_back($1);
+				$$ = $2;						/*assign 2nd argument value*/
+				$$ -> push_back($1);			/*push 1st argument*/
 }
-			|	{std::vector<std::ASTNode*>* temp = new std::vector<std::ASTNode*>; $$ = temp;};;
+			|	{std::vector<std::ASTNode*>* temp = new std::vector<std::ASTNode*>; $$ = temp;};;	/*declared new expr vector*/
 
-expr_list_tail:	TOKEN_OP_COMMA expr expr_list_tail{/*add the expr to the expr vector*/
+expr_list_tail:	TOKEN_OP_COMMA expr expr_list_tail{		/*add the expr to the expr vector*/
 				$$ = $3;
 				$$ -> push_back($2);
 		}
-			|	{std::vector<std::ASTNode*>* temp = new std::vector<std::ASTNode*>; $$ = temp;};
+			|	{std::vector<std::ASTNode*>* temp = new std::vector<std::ASTNode*>; $$ = temp;};	/*declared new expr vector*/
 
 primary:		TOKEN_OP_LP expr TOKEN_OP_RP{$$=$2;}
 			|	id{
 								std::ASTNode * id_node = new ASTNode();
-								id_node -> change_node_type(name_value);
+								id_node -> change_node_type(name_value);	/*Create node and then assign its node type*/
 								//id_node -> add_name(*($1));
-								std::string s = (*($1));
-								if(func_var_map[*($1)] == true){
-									int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s] -> get_stack_pointer() );
-									std::string stack_label = std::to_string(static_cast<long long>(stack_num));
-									s = stack_sign + stack_label;
+								std::string s = (*($1));					/*Define new string with 1st argument*/
+								if(func_var_map[*($1)] == true){			/*If that arg is mapped then,*/
+									int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s] -> get_stack_pointer() ); /*Fetch out the postion*/
+									std::string stack_label = std::to_string(static_cast<long long>(stack_num));	/*Fetch label from that position*/
+									s = stack_sign + stack_label;			/*Define stack variable*/
 									id_node -> add_name(s);
-									//cout << "the primary: " << *$1 <<endl;
-									//cout << "the size of the scope: " << SymTabHead.size() <<endl;
-									//cout << (SymTabHead[SymTabHead.size() - 1]->get_tab())[*($1)] -> get_type() <<endl;
-									int temp = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[*($1)] -> get_type() );
-									id_node -> change_int_or_float(temp == TOKEN_INT);
+									int temp = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[*($1)] -> get_type() ); /*Get the unused temp symbol variable from stack*/
+									id_node -> change_int_or_float(temp == TOKEN_INT);		/*Assign the type to it*/
 								}
 								else{
-									int temp = ( (SymTabHead.front()->get_tab())[*($1)] -> get_type() );
-									id_node -> change_int_or_float(temp == TOKEN_INT);
-									id_node -> add_name(s);
-								}
+									int temp = ( (SymTabHead.front()->get_tab())[*($1)] -> get_type() );	/*Get unused temp variable*/
+									id_node -> change_int_or_float(temp == TOKEN_INT);		/*Assign the type to it*/
+									id_node -> add_name(s);									/*assign its name*/
+								}																
 								$$ = id_node;
 							}
-			|	TOKEN_INTLITERAL{//AST node
+			|	TOKEN_INTLITERAL{											/*AST node*/
 								std::ASTNode * int_node = new ASTNode();
 								int_node -> change_node_type(int_value);
 								int_node -> add_value(*(yylval.str));
-								int_node -> change_int_or_float(true);
+								int_node -> change_int_or_float(true);		/*Create node and assign its type,value,int or float type*/
 								$$ = int_node;
-								//try to store IR_code
+								/*try to store IR_code*/
 								std::string temp_counter_str = std::to_string(static_cast<long long>(++temp_counter));
-								std::string s = temp_name + temp_counter_str;
-								std::IR_code * int_code = new IR_code("STOREI", *(yylval.str), "", s , temp_counter);
-								int_node -> change_temp_count(s);
-								IR_vector.push_back(int_code);
+								std::string s = temp_name + temp_counter_str;	/*Get variable for use*/
+								std::IR_code * int_code = new IR_code("STOREI", *(yylval.str), "", s , temp_counter);	/*Create new node with its related parameters*/
+								int_node -> change_temp_count(s);			/*Assign its temp count*/
+								IR_vector.push_back(int_code);				/*push that node into vector*/
 							}
-			|	TOKEN_FLOATLITERAL{//AST node
+			|	TOKEN_FLOATLITERAL{											/*AST node*/
 									std::ASTNode * float_node = new ASTNode();
 									float_node -> change_node_type(float_value);
 									float_node -> add_value(*(yylval.str));
-									float_node -> change_int_or_float(false);
-									//cout << float_node -> get_value() << " this is f value" << endl;
+									float_node -> change_int_or_float(false);	/*Create node and assign its type,value,int or float type*/
 									$$ = float_node;
-									//try to store IR_code
+									/*try to store IR_code*/
 									std::string temp_counter_str = std::to_string(static_cast<long long>(++temp_counter));
-									std::string s = temp_name + temp_counter_str;
+									std::string s = temp_name + temp_counter_str;	/*Get variable for use*/
 									std::IR_code * float_code = new IR_code("STOREF", *(yylval.str), "", s, temp_counter );
-									//set the temp counter
+									/*set the temp counter*/
 									float_node -> change_temp_count(s);
-									IR_vector.push_back(float_code);
+									IR_vector.push_back(float_code);		/*push that node into vector*/
 								};
 
-addop:			TOKEN_OP_PLUS{
+addop:			TOKEN_OP_PLUS{												/*Assign the node as ADD op node*/
 								std::ASTNode * op_node = new ASTNode();
 								op_node -> change_node_type(operator_value);
 								op_node -> change_operation_type(TOKEN_OP_PLUS);
 								$$ = op_node;
 							}
-			|	TOKEN_OP_MINS{
+			|	TOKEN_OP_MINS{												/*Assign the node as SUB op node*/
 								std::ASTNode * op_node = new ASTNode();
 								op_node -> change_node_type(operator_value);
 								op_node -> change_operation_type(TOKEN_OP_MINS);
 								$$ = op_node;
 							};
 
-mulop:			TOKEN_OP_STAR{
+mulop:			TOKEN_OP_STAR{												/*Assign the node as MUL op node*/
 								std::ASTNode * op_node = new ASTNode();
 								op_node -> change_node_type(operator_value);
 								op_node -> change_operation_type(TOKEN_OP_STAR);
 								$$ = op_node;
 							}
-			|	TOKEN_OP_SLASH{
+			|	TOKEN_OP_SLASH{												/*Assign the node as DIV op node*/
 								std::ASTNode * op_node = new ASTNode();
 								op_node -> change_node_type(operator_value);
 								op_node -> change_operation_type(TOKEN_OP_SLASH);
 								$$ = op_node;
 							};
 
-if_stmt:		TOKEN_IF{//add if block
-	/*std::string block_counter_str = std::to_string(static_cast<long long>(++block_counter));
-	std::string s = block_name + " " + block_counter_str;
-	std::Scope * if_blockScope = new std::Scope(s);
-	SymTabHead.push_back(if_blockScope);*/
+if_stmt:		TOKEN_IF{		/*add if block*/
 	label_num = label_num + 2;
-	label_counter.push(label_num - 1);
-	//map_index = 0;
-} TOKEN_OP_LP cond TOKEN_OP_RP decl stmt_list{	//jump to the end of for
-												std::string jump_label = std::to_string(static_cast<long long>(label_counter.top()+1));
-												std::string jump_s = lable_name + jump_label;
-												std::IR_code * jump_IR = new IR_code("JUMP", "", "", jump_s, temp_counter);
-												IR_vector.push_back(jump_IR);
-												//label for the beginning of the else
-												std::string else_label = std::to_string(static_cast<long long>(label_counter.top()));
-												std::string else_s = lable_name + else_label;
-												std::IR_code * else_IR = new IR_code("LABEL", "", "", else_s, temp_counter);
-												IR_vector.push_back(else_IR);
+	label_counter.push(label_num - 1);		/*push that number into vector*/
+} TOKEN_OP_LP cond TOKEN_OP_RP decl stmt_list{	/*jump to the end of for*/
+												std::string jump_label = std::to_string(static_cast<long long>(label_counter.top()+1));	/*Create new node with op LABEL*/
+												std::string jump_s = lable_name + jump_label;		/*To return Label with its jmp counter*/
+												std::IR_code * jump_IR = new IR_code("JUMP", "", "", jump_s, temp_counter);	/*Create new node with op LABEL*/
+												IR_vector.push_back(jump_IR);		/*push that node into vector*/
+												/*label for the beginning of the else*/
+												std::string else_label = std::to_string(static_cast<long long>(label_counter.top()));	/*Create new node with op LABEL*/
+												std::string else_s = lable_name + else_label;		/*To return Label with its counter*/
+												std::IR_code * else_IR = new IR_code("LABEL", "", "", else_s, temp_counter);	/*Create new node with op LABEL*/
+												IR_vector.push_back(else_IR);		/*push that node into vector*/
 } else_part TOKEN_FI{
-						std::string end_label = std::to_string(static_cast<long long>(label_counter.top()+1));
-						std::string end_s = lable_name + end_label;
-						std::IR_code * end_IR = new IR_code("LABEL", "", "", end_s, temp_counter);
-						IR_vector.push_back(end_IR);
-						label_counter.pop();
+						std::string end_label = std::to_string(static_cast<long long>(label_counter.top()+1));		/*Get label counter*/
+						std::string end_s = lable_name + end_label;										/*To return Label with its counter*/
+						std::IR_code * end_IR = new IR_code("LABEL", "", "", end_s, temp_counter);		/*Create new node with op LABEL*/
+						IR_vector.push_back(end_IR);		/*push that node into vector*/
+						label_counter.pop();				/*pop the label counter*/
 };
 
-else_part:		TOKEN_ELSE{//add else block
+else_part:		TOKEN_ELSE{		/*add else block*/
 	/*std::string block_counter_str = std::to_string(static_cast<long long>(++block_counter));
 	std::string s = block_name + " " + block_counter_str;
 	std::Scope * else_blockScope = new std::Scope(s);
