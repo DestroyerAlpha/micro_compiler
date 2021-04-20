@@ -621,54 +621,82 @@ expr_prefix:	expr_prefix factor addop{
 										}
 			|	{$$ = NULL;};
 
+// grammer for factor
 factor:			factor_prefix postfix_expr{
+											// checking if first operand is null
 											if ($1 == NULL){
+											assign result as second operand as first operand is null
 												$$ = $2;
 											}
 											else{
+											// if both operand are not null
+											// initialize operand values as empty strings
 												std::string s_op1 = "";
 												std::string s_op2 = "" ;
 												std::string s_result = "" ;
 												std::string s_type = "" ;
+												// check is operand 1 and operand 2 is int or float
+												// to operate with arthimatic operator
+												// check if both are of same type
 												if($1->get_int_or_float() == $2->get_int_or_float()){
+													// adding right child to first operand in ast
 													$1 -> add_right_child($2);
+													// checking is operand for int or float
+													// if int use MULI and DIVI
 													if($1->get_int_or_float()){
 														//int op
+														// check for operation type
 														if($1->get_operation_type() == TOKEN_OP_STAR){
+														// if operator is "*" then MULI
 															s_type = "MULI";
 														}
 														else if($1->get_operation_type() == TOKEN_OP_SLASH){
+														// if operator is "/" then DIVI
 															s_type = "DIVI";
 														}
 													}
 													else{
+														// if operands are of type float
 														//float op
+														// check for operation type
 														if($1->get_operation_type() == TOKEN_OP_STAR){
+														// if operator is "*" then MUL
 															s_type = "MULF";
 														}
 														else if($1->get_operation_type() == TOKEN_OP_SLASH){
+														// if operator is "/" then DIV
 															s_type = "DIVF";
 														}
 													}
 													//set op1
+													// check if operand has left child of type name_value
 													if(($1->get_left_node())->get_node_type() == name_value){
+														// if true assign the operand 1 equals to left child of node
 														s_op1 = ($1->get_left_node())->get_name();
 													}
 													else{
+														// else if not true assign a new temporary to operand 1
 														s_op1 = ($1->get_left_node())->get_temp_count();
 													}
 													//set op2
+													// check if operand 2 has right child of type name_value
 													if(($1->get_right_node())->get_node_type() == name_value){
+														// if true assign operand 2 the name of right child
 														s_op2 = ($1->get_right_node())->get_name();
 													}
 													else{
+														// else if not true assign a new temporary to it
 														s_op2 = ($1->get_right_node())->get_temp_count();
 													}
+													// increment temp counter
 													std::string temp_counter_str = std::to_string(static_cast<long long>(++temp_counter));
+													// assigning new temporary to result 
 													s_result = temp_name + temp_counter_str;
 													//set the temp counter in node factor
 													$1->change_temp_count(s_result);
+													//generating IR code for processed inst
 													std::IR_code * factor_code = new IR_code(s_type, s_op1, s_op2, s_result, temp_counter);
+													// pushing IR code to IR_vector
 													IR_vector.push_back(factor_code);
 													//cout << "if factor called " << $1->get_temp_count() << endl;
 												}
@@ -681,62 +709,91 @@ factor:			factor_prefix postfix_expr{
 											}
 										};
 
+// recursive grammer for factor_prefix
 factor_prefix:	factor_prefix postfix_expr mulop{
+												// check if first operand is null
 												if($1 == NULL){
+													// adding left child in ast
 													$3 -> add_left_child($2);
-													//set the node int_or_float type
+													// set the node int_or_float type
+													// depends on child's type
 													$3->change_int_or_float($2->get_int_or_float());
 
 												}
 												else{
+													// if first operand is not null
+													// if first and second operand are of same type to be able
+													// to operate on given operation
 													if($1->get_int_or_float() == $2->get_int_or_float()){
+														// add right child to first operand
 														$1 -> add_right_child($2);
+														// add left child as first operand
 														$3 -> add_left_child($1);
+														// set node int_or_float value type
 														$3 -> change_int_or_float($1->get_int_or_float());
 
+														// initialize the operation variables
 														std::string s_op1 = "";
 														std::string s_op2 = "" ;
 														std::string s_result = "" ;
 														std::string s_type = "" ;
 
+														// check if operation is over int or float to operate
 														if($1->get_int_or_float()){
+															// if int apply integer operations
 															//int op
+															// check operation type
 															if($1->get_operation_type() == TOKEN_OP_STAR){
+																// if operation type is "*" then MUL
 																s_type = "MULI";
 															}
 															else if($1->get_operation_type() == TOKEN_OP_SLASH){
+																// if operation type is "/" then DIV
 																s_type = "DIVI";
 															}
 														}
 														else{
 															//float op
+															// if operands aren't integer but float
 															if($1->get_operation_type() == TOKEN_OP_STAR){
+																// if operation type is "*" then MUL
 																s_type = "MULF";
 															}
 															else if($1->get_operation_type() == TOKEN_OP_SLASH){
+																// if operation type is "/" then DIV
 																s_type = "DIVF";
 															}
 														}
 
+														// check if operand 1 node type is name_value
 														if(($1->get_left_node())->get_node_type() == name_value){
+															// if true then assign operand 1 with name of left_node
 															s_op1 = ($1->get_left_node())->get_name();
 														}
 														else{
+															// if not true assign a new temporary to operand
 															s_op1 = ($1->get_left_node())->get_temp_count();
 															//cout << "test factor_prefix op1 " << s_type << " temp: " << s_op1 <<endl;
 														}
+														// check if operand 2 node type is name value
 														if(($1->get_right_node())->get_node_type() == name_value){
+														// if true assign right child name to variable
 															s_op2 = ($1->get_right_node())->get_name();
 														}
 														else{
+															// if not true assign a new temporary to operand 2
 															s_op2 = ($1->get_right_node())->get_temp_count();
 															//cout << "test factor_prefix op2 " << s_type << " temp: " << s_op2 <<endl;
 														}
+														// increment temp counter 
 														std::string temp_counter_str = std::to_string(static_cast<long long>(++temp_counter));
+														// assign new temporary to result
 														s_result = temp_name + temp_counter_str;
 														//set the temp counter in node factor
 														$1->change_temp_count(s_result);
+														// generate IR code for processed operation
 														std::IR_code * factor_code = new IR_code(s_type, s_op1, s_op2, s_result, temp_counter);
+														// pushing IR code to IR_vector
 														IR_vector.push_back(factor_code);
 
 													}
