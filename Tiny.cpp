@@ -1,8 +1,11 @@
 //Acknowledgement: Qifan Chang and Zixian Lai
 
+// Importing Tiny.h, where the classes are defined.
+
 #include "Tiny.h"
 
 namespace std{
+	// Initializing the class variables deined in Tiny.h
 	Tiny::Tiny(std::vector<std::IR_code*> IR_vector_in){
 		IR_vector = IR_vector_in;
 		reg_counter = -1;
@@ -10,30 +13,39 @@ namespace std{
 		s = "";
 	}
 
+	// Defining virtual function of Tiny()
 	Tiny::~Tiny(){}
 
+	//Defining gentiny()
 	void Tiny::genTiny(){
+		//Initialize register count to zero
 		int regcnt = 0;
+		// Current register number
 		int curr_reg;
+		// String for comparing value
 		std::string cmpr_val;
+		// Register stack
 		std::stack<int> reg_stack;
+		// Intermediate code representation stack
 		std::stack<int> IR_ct_stack;
+		// label stack
 		std::stack<std::string> label_stack;
 //--------------------------Pre-Tiny code generation(for optimization)-----------------------
 		for (int i = 0; i < IR_vector.size(); i++)
 		{
+			// If operator type is STOREI or STOREF
 			if (IR_vector[i]->get_op_type() == "STOREI" ||
 				IR_vector[i]->get_op_type() == "STOREF"){
 					if((IR_vector[i]->get_result()).find("!T") == std::string::npos){
 						if (var_dict.find(IR_vector[i]->get_result()) != var_dict.end()){
-							//creating reg_dict
+							//creating reg_dict to store operand 1
 							if((IR_vector[i]->get_op1()).find("!T") != std::string::npos){
 								reg_dict[IR_vector[i]->get_op1()] = IR_vector[i]->get_result();
 							}
 							//cout << IR_vector[i]->get_op1() << " : " << reg_dict[IR_vector[i]->get_op1()] << endl;
 						}
 						else{
-		 				   //creating var_dict
+		 				   // 
 							//   "r" + std::to_string(static_cast<long long>(regcnt++));
 						   var_dict[IR_vector[i]->get_result()] = IR_vector[i]->get_result();
 						   if((IR_vector[i]->get_op1()).find("!T") != std::string::npos){
