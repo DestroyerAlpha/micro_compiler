@@ -223,6 +223,8 @@ any_type:	var_type{
 			//Returns VOID if function return type is VOID
 			$$ = TOKEN_VOID;};
 
+
+//declaring identifiers one here and other in id_tail
 id_list:	id id_tail{
 	//Return a vector of strings of id. Eg: a,b,c; returns vector{a,b,c}
 						$$ = $2; $$ -> push_back($1);
@@ -235,49 +237,75 @@ id_tail:	TOKEN_OP_COMMA id id_tail{
 			//Returns the vector to add the ID
 			std::vector<std::string*>* temp = new std::vector<std::string*>; $$ = temp; };
 
+// same grammer as id_list but used as parameters to function
+// func_decl calls this grammer to have one or more parameter to declare
 param_decl_list:	param_decl param_decl_tail{}
 				|	;
 
+// parameter declaration with variable type as var_type and identifier
 param_decl:	var_type id{
+	// defining new symbol
 	std::Symbol * newSym = new std::Symbol($2, NULL, $1, ++param_counter);
-
+	// updating SymTabHead with new symbol
 	SymTabHead.back() -> insert_record(*($2) , newSym);
+	// updating variable map with variable as in_function variable
 	func_var_map[*($2)] = in_function;
 
 };
 
+// recursive grammer to declare zero or more parameters
 param_decl_tail:	TOKEN_OP_COMMA param_decl param_decl_tail{}
 				|	;
 
+// recursive grammer to declare zero or more functions
 func_declarations:   func_decl func_declarations{}
 				|	;
 
-func_decl:	TOKEN_FUNCTION any_type id {//add function scope
+// function declaration 
+func_decl:	TOKEN_FUNCTION any_type id {
+	//add function scope
 	std::Scope * funcScope = new std::Scope(*$3);
+	// updating SymTabHead with new function's scope
 	SymTabHead.push_back(funcScope);
 	//map_index = 0;
 	//add label name
+	// generating label for function in IR code
 	std::IR_code *func_code = new std::IR_code("LABEL", "", "", *$3, temp_counter);
+	// updating IR_vector with func_code
 	IR_vector.push_back(func_code);
+	// setting in_function true
 	in_function = true;
+	// updating map for function
 	if($2 == TOKEN_INT){
 		func_type_map[*($3)] = true;
 	}
 	else{
 		func_type_map[*($3)] = false;
 	}
-	}TOKEN_OP_LP{param_counter = 1; local_counter = 0;} param_decl_list TOKEN_OP_RP TOKEN_BEGIN func_body TOKEN_END{in_function = false;};
+	// generating rest of function body
+	}TOKEN_OP_LP{param_counter = 1; local_counter = 0;
+	// grammer for parameter list} 
+	param_decl_list TOKEN_OP_RP {
+	// function body beginning}
+	TOKEN_BEGIN func_body{ 
+	// exiting function and thus setting in_function variable to false}
+	TOKEN_END{in_function = false;};
 
+// grammer for function body declaration
 func_body:	{link_counter = 1;}
 			decl{
 				std::string link_counter_str = std::to_string(static_cast<long long>(link_counter));
+				// generating IR link code fot link_counter_str
 				std::IR_code *link_code = new std::IR_code("LINK", link_counter_str, "", "", link_counter);
+				// pushing IR code to IR_vector
 				IR_vector.push_back(link_code);
 			} stmt_list{};
 
+// recursive grammer to generate statements 
 stmt_list:	stmt stmt_list{};
 		|
 
+// broadly separating stmt into 3 categories
 stmt:		base_stmt{}
 		|	if_stmt{}
 		|	for_stmt{};
@@ -808,21 +836,6 @@ primary:		TOKEN_OP_LP expr TOKEN_OP_RP{$$=$2;}
 									id_node -> change_int_or_float(temp == TOKEN_INT);
 									id_node -> add_name(s);
 								}
-
-								//int temp = ( (SymTabHead.front()->get_tab())[*($1)] -> get_type() );
-								//id_node -> change_int_or_float(temp == TOKEN_INT);
-								/*for(int sym_size = 0; sym_size < SymTabHead.size(); sym_size++){
-									cout << sym_size <<endl;
-									std::map< string, Symbol*>::iterator test = (SymTabHead.front()->get_tab()).find(*($1));
-									cout << *($1) << endl;
-									if(test == (SymTabHead.front()->get_tab()).end()){
-										cout << "not found"<<endl;
-									}
-									else{
-										cout <<"aaaaaaaaaaaaaaaaaaaaaaaaaaaaa" <<endl;
-									}
-									//if((SymTabHead.front()->get_tab())[*($1)])
-								}*/
 								$$ = id_node;
 							}
 			|	TOKEN_INTLITERAL{//AST node
