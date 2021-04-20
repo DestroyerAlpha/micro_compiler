@@ -1,7 +1,7 @@
-//Acknowledgement: Qifan Chang and Zixian Lai
 /*
 	The ASTNode.h
 */
+// Importing relevent files and libraries
 #ifndef ASTNODE_H
 #define ASTNODE_H
 #include <string>
@@ -12,6 +12,8 @@
 
 namespace std{
 
+	// Defining enum AST_Node_type.
+	// Node can have 6 types: Undefined, Operator, Integer, Float, Name or Function
 	enum AST_Node_type
 	{
 		undefinded,
@@ -22,6 +24,7 @@ namespace std{
 		name_value
 	};
 
+	// Defining ASTNode class. The indivisual functions are defined in detail in ASTNode.cpp
 	class ASTNode
 	{
 	private:
@@ -32,7 +35,7 @@ namespace std{
 		string temp_count;
 
 		int Operation_type;
-		bool int_or_float;//int = true float = false
+		bool int_or_float; //int = true & float = false
 		string value;
 
 	public:
@@ -55,6 +58,8 @@ namespace std{
 		void change_temp_count(string number);
 		string get_temp_count();
 	};
+
+	// Defining IR_code class. The indivisual functions are defined in detail in ASTNode.cpp
 	class IR_code
 	{
 	private:
