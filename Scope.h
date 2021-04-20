@@ -1,3 +1,5 @@
+//Acknowledgement: Qifan Chang and Zixian Lai
+//Documentation done by Mehul Bose
 /*
 	The Scope class
 */

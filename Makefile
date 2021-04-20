@@ -1,6 +1,6 @@
 dev:
-	@echo "Shivam Chaturvedi"
-	@echo "180010032@iitdh.ac.in"
+	@echo "Rutik Dadhaniya"
+	@echo "180010013@iitdh.ac.in"
 compiler:
 	@bison -d -t -o microParser.cpp microParser.yy
 	@flex lex.ll

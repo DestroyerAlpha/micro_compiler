@@ -1,4 +1,8 @@
+//Acknowledgement: Qifan Chang and Zixian Lai
+//Documentation done by Mehul Bose
+
 // Importing relevent files and libraries
+
 #include "Scope.h"
 #include <iostream>
 
