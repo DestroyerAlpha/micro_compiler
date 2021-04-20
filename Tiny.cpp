@@ -1,5 +1,6 @@
 //Acknowledgement: Qifan Chang and Zixian Lai
 
+
 // Importing Tiny.h, where the classes are defined.
 
 #include "Tiny.h"
@@ -170,7 +171,10 @@ namespace std{
 
 			// If operator type is DIVF, print 3ac for it along with the steps involved
 			else if( curr_op_type == "DIVF"){
+				// Move operand 1 to r0
 				cout << "move " << curr3ac->get_op1() << " r0" << endl;
+
+				// Divide float in operand 2 to r0
 				cout << "divr " << curr3ac->get_op2() << " r0" << endl;
 
 				// Store the result of the operation
@@ -179,11 +183,13 @@ namespace std{
 
 			// If operator type is LABEL, print 3ac for it along with the steps involved
 			else if( curr_op_type == "LABEL"){
+				// Print "label " and then the label name
 				if (curr3ac -> get_op1() == "main") {cout << "label " << curr3ac -> get_op1() << endl;}
 				else{
 					cout << "label " << curr3ac -> get_result() << endl;
 					//cout << "heeere pre" << endl;
 					if (i + 1< IR_vector.size()){
+						// Push the label in the stack if it appears for the first time
 						if (IR_vector[i+1] -> get_op_type() == "FOR_START"){label_stack.push(curr3ac -> get_result());}
 					}
 					//cout << "heeere post" << endl;
