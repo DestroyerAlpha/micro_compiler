@@ -477,21 +477,22 @@ return_stmt:	TOKEN_RETURN expr TOKEN_OP_SEMIC{	/*Returns the status of execution
 };
 
 expr:			expr_prefix factor{
-									//cout << "counting add/sub times*********" <<endl;
 									if ($1 == NULL){
+										//expr with only factor
 										$$ = $2;
-										//cout << "EXPR with only facto: " << $2->get_temp_count() <<endl;
-										//cout << temp_counter <<endl;
 									}
 									else{
 											std::string s_op1 = "";
 											std::string s_op2 = "" ;
 											std::string s_result = "" ;
 											std::string s_type = "" ;
+											//Check if both prefix expression and factor are of the same type
 											if($1->get_int_or_float() == $2->get_int_or_float()){
+												//Assigns factor to be the right child of the ASTNode of prefix
 												$1 -> add_right_child($2);
+												//Check type of the prefix expression
 												if($1->get_int_or_float()){
-													//int op
+													//Operations on INT
 													if($1->get_operation_type() == TOKEN_OP_PLUS){
 														s_type = "ADDI";
 													}
@@ -500,7 +501,7 @@ expr:			expr_prefix factor{
 													}
 												}
 												else{
-													//float op
+													//Operations on Float
 													if($1->get_operation_type() == TOKEN_OP_PLUS){
 														s_type = "ADDF";
 													}
@@ -508,52 +509,63 @@ expr:			expr_prefix factor{
 														s_type = "SUBF";
 													}
 												}
-												//set op1
+												
 												if(($1->get_left_node())->get_node_type() == name_value){
+													//If left node of prefix is of name_value type, set operand1 as the name
 													s_op1 = ($1->get_left_node())->get_name();
 												}
 												else{
+													//Else assign a temp to operand1
 													s_op1 = ($1->get_left_node())->get_temp_count();
 												}
-												//set op2
+												
 												if(($1->get_right_node())->get_node_type() == name_value){
+													//If right node of prefix is of name_value type, set operand2 as the name
 													s_op2 = ($1->get_right_node())->get_name();
 												}
 												else{
+													//Else assign a temp to operand2
 													s_op2 = ($1->get_right_node())->get_temp_count();
 												}
+												//Create a temp to store the result
 												std::string temp_counter_str = std::to_string(static_cast<long long>(++temp_counter));
 												s_result = temp_name + temp_counter_str;
 												//set the temp counter in node factor
 												$1->change_temp_count(s_result);
+												//Create IR Code for the expression
 												std::IR_code * add_code = new IR_code(s_type, s_op1, s_op2, s_result, temp_counter);
+												//Add IR Code to the IR Code vector
 												IR_vector.push_back(add_code);
-												//cout << "if factor called " << $1->get_temp_count() << endl;
 										}
 										else{
 											//wrong type
 										}
+									//Return the expression
 									$$ = $1;
 								}
 							};
 
 expr_prefix:	expr_prefix factor addop{
 											if($1 == NULL){
+												//If expr_prefix is NULL, initialise a addop ASTNode's
+												//left child as factor. Right remains uninitialised
 												$3 -> add_left_child($2);
+												//Set datatype for the factor
 												$3 -> change_int_or_float($2->get_int_or_float());
 											}
 											else{
-												//$1 -> add_right_child($2);
-												//$3 -> add_left_child($1);
 												std::string s_op1 = "";
 												std::string s_op2 = "" ;
 												std::string s_result = "" ;
 												std::string s_type = "" ;
 												if($1->get_int_or_float() == $2->get_int_or_float()){
+														//Right child is init to factor
 														$1 -> add_right_child($2);
+														//Left Child is init to prefix expression
 														$3 -> add_left_child($1);
+														//Data type for the resulting expression set
 														$3 -> change_int_or_float($1->get_int_or_float());
-
+														//Checking the type of the operation
 														if($1->get_int_or_float()){
 															//int op
 															if($1->get_operation_type() == TOKEN_OP_PLUS){
@@ -572,35 +584,39 @@ expr_prefix:	expr_prefix factor addop{
 																s_type = "SUBF";
 															}
 														}
-
+														
 														if(($1->get_left_node())->get_node_type() == name_value){
+															//If left ASTnode of prefix is a name_value type, set operand1 as its name
 															s_op1 = ($1->get_left_node())->get_name();
 														}
 														else{
+															//Else assign a temp as operand 1
 															s_op1 = ($1->get_left_node())->get_temp_count();
-															//cout << "test factor_prefix op1 " << s_type << " temp: " << s_op1 <<endl;
 														}
 														if(($1->get_right_node())->get_node_type() == name_value){
+															//If right ASTnode of prefix is a name_value type, set operand2 as its name
 															s_op2 = ($1->get_right_node())->get_name();
 														}
 														else{
+															//Else assign a temp as operand2
 															s_op2 = ($1->get_right_node())->get_temp_count();
-															//cout << "test factor_prefix op2 " << s_type << " temp: " << s_op2 <<endl;
 														}
+														//Create a string to store a temp
 														std::string temp_counter_str = std::to_string(static_cast<long long>(++temp_counter));
 														s_result = temp_name + temp_counter_str;
 														//set the temp counter in node factor
 														$1->change_temp_count(s_result);
+														//Create IR Code for the expression
 														std::IR_code * add_code = new IR_code(s_type, s_op1, s_op2, s_result, temp_counter);
+														//Add IR Code to the IR Code vector
 														IR_vector.push_back(add_code);
 
 												}
 												else{
 													//return error cant add int with float
-													//cout << "this is causing error-----------" <<endl;
-													//cout << "buggggggggggggggggggggggggggggggg" <<endl;
 												}
 											}
+											//Return the addop ASTNode
 											$$ = $3;
 										}
 			|	{$$ = NULL;};
