@@ -109,28 +109,35 @@ std::map<string, bool> func_type_map;
 
 
 %%
-program:	TOKEN_PROGRAM id TOKEN_BEGIN{//add global scope
+program:	TOKEN_PROGRAM id TOKEN_BEGIN{
+	//Create a scope object by the name "GLOBAL"
 	std::Scope * globalScope = new std::Scope(global_name);
+	//Add the Global Scope to the Symbol table
 	SymTabHead.push_back(globalScope);
-	//map_index = 0;
 	//add start of the IR code
 	std::IR_code * start_code = new std::IR_code("IR", "code", "", "", temp_counter);
+	//Add the first line of IR Code to the IR Code Vector
 	IR_vector.push_back(start_code);
 
 }
 pgm_body TOKEN_END{};
 
-id:			TOKEN_IDENTIFIER{$$ = yylval.str;};
+id:			TOKEN_IDENTIFIER{
+	//Return the ID name for the rule
+	$$ = yylval.str;};
 
 pgm_body:	decl{
+				//Push the 4 registers to the stack
 				std::IR_code * push_code = new std::IR_code("PUSH", "", "", "", temp_counter);
 				IR_vector.push_back(push_code);
 				IR_vector.push_back(push_code);
 				IR_vector.push_back(push_code);
 				IR_vector.push_back(push_code);
 				IR_vector.push_back(push_code);
+				//Add a Jump to Main (Executin starts from Main)
 				std::IR_code * main_code = new std::IR_code("JSR", "", "", "main", temp_counter);
 				IR_vector.push_back(main_code);
+				//In case we skip a jump to main, halt the execution
 				std::IR_code * halt_code = new std::IR_code("HALT", "", "", "", temp_counter);
 				IR_vector.push_back(halt_code);
 
@@ -141,61 +148,92 @@ decl:		string_decl decl{}
 		|	;
 
 string_decl:	TOKEN_STRING id TOKEN_OP_NE str TOKEN_OP_SEMIC{
+	//Create a new symbol with name as id and value as str
 	Symbol *newSym = new std::Symbol($2, $4, TOKEN_STRING, 0);
+	//Insert it in the last scope of the Symbol Table
 	SymTabHead.back() -> insert_record(*($2) ,newSym);
+	//Create IR code for the string declaration
 	std::IR_code * string_decl = new std::IR_code("STRING_DECL", *$2, "", *$4, temp_counter);
 	if (in_function == false){
+		//Add the IR code to the IR Code vector if not defined in function
 		IR_vector.push_back(string_decl);
 	}
 	else{
+		//Increment the link counter for the function
 		link_counter = link_counter + 1;
 	}
 	func_var_map[*$2] = in_function;
 	//IR_vector.push_back(string_decl);
 };
 
-str:		TOKEN_STRINGLITERAL{$$ = yylval.str;};
+str:		TOKEN_STRINGLITERAL{
+	//Return the string name
+	$$ = yylval.str;};
 
 var_decl:	var_type id_list TOKEN_OP_SEMIC{
 	std::string s_type = "";
+	//Iterating over the number of variables in id_list
 	for(int i = $2 -> size() -1; i >= 0; i--){
+		//Reducing the local_counter from 0 to as this points to the location of the ID on stack
+		//Stack grows in downwards direction
 		if (in_function == true)
 		{
 			local_counter = local_counter - 1;
 		}
+		//Create new Symbol with value set to NULL, type set to var_type and local_counter points 
+		//its location in stack
 		std::Symbol * newSym = new std::Symbol((*$2)[i], NULL, $1, local_counter);
+		//IR Code Comment for debugging
 		cout << ";" <<  *( (*$2)[i] ) << " the local counter: " << local_counter <<endl;
+		//Add the symbol to the last scope in the symbol table
 		SymTabHead.back() -> insert_record(*( (*$2)[i] ) , newSym);
 		func_var_map[*( (*$2)[i] )] = in_function;
+		//Define the symbol type for the IR code
 		if($1 == TOKEN_INT){
 			s_type = "INT_DECL";
 		}
 		else if($1 == TOKEN_FLOAT){
 			s_type = "FLOAT_DECL";
 		}
+		//Create the IR code
 		std::IR_code * string_decl = new std::IR_code(s_type, *( (*$2)[i] ), "", "", temp_counter);
 		if (in_function == false){
+			//Push the IR code to the IR Code vector, if the variable declaration is not in function
 			IR_vector.push_back(string_decl);
 		}
 		else{
+			//Increment the link counter for the function
 			link_counter = link_counter + 1;
 		}
 		//IR_vector.push_back(string_decl);
 	}
 };
 
-var_type:	TOKEN_FLOAT{$$ = TOKEN_FLOAT;}
-		|	TOKEN_INT{$$ = TOKEN_INT; };
+var_type:	TOKEN_FLOAT{
+	//Returns the type of the variable (FLOAT)
+	$$ = TOKEN_FLOAT;}
+		|	TOKEN_INT{
+			//Returns the type of the variable (INT)
+			$$ = TOKEN_INT; };
 
-any_type:	var_type{$$ = $1;}
-		|	TOKEN_VOID{$$ = TOKEN_VOID;};
+any_type:	var_type{
+	//Returns the data type for function return
+	$$ = $1;}
+		|	TOKEN_VOID{
+			//Returns VOID if function return type is VOID
+			$$ = TOKEN_VOID;};
 
 id_list:	id id_tail{
+	//Return a vector of strings of id. Eg: a,b,c; returns vector{a,b,c}
 						$$ = $2; $$ -> push_back($1);
 						}
 
-id_tail:	TOKEN_OP_COMMA id id_tail{$$ = $3; $$ -> push_back($2);}
-		|	{std::vector<std::string*>* temp = new std::vector<std::string*>; $$ = temp; };
+id_tail:	TOKEN_OP_COMMA id id_tail{
+	//Same thing as above, recursively defined
+	$$ = $3; $$ -> push_back($2);}
+		|	{
+			//Returns the vector to add the ID
+			std::vector<std::string*>* temp = new std::vector<std::string*>; $$ = temp; };
 
 param_decl_list:	param_decl param_decl_tail{}
 				|	;
