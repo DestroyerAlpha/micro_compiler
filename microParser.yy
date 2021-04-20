@@ -985,59 +985,87 @@ else_part:		TOKEN_ELSE{//add else block
 } decl stmt_list{}
 			|	;
 
+// grammer for cond
 cond:			expr compop expr{
+									// intialize compop_str to empty str
 									std::string compop_str = "";
+									// switch case for compop to compop_str
 									switch($2){
 										case TOKEN_OP_LESS:
 											compop_str = "GE";
+											// convert "<" to GE
 											break;
 										case TOKEN_OP_GREATER:
 											compop_str = "LE";
+											// convert ">" to LE
 											break;
 										case TOKEN_OP_EQ:
 											compop_str = "NE";
+											// convert "=" to NE
 											break;
 										case TOKEN_OP_NEQ:
 											compop_str = "EQ";
+											// convert "!=" to EQ
 											break;
 										case TOKEN_OP_LE:
 											compop_str = "GT";
+											// convert "<=" to GT
 											break;
 										case TOKEN_OP_GE:
 											compop_str = "LT";
+											// convert ">=" to LT
 											break;
 									}
+									// initialize variables 
 									std::string s1 = "";
 									std::string s2 = "";
 									int cmp_type = 0;
+									// check if operand 1 and 3 have same data type
 									if($1->get_int_or_float() == $3->get_int_or_float()){
+										// if true check if operand 1 has name value
 										if($1->get_node_type() == name_value){
+											// assign s1 to operand 1 name value
 											s1 = $1->get_name();
+											// check func_var_map for s1
 											if (func_var_map[s1])
 											{
+												// getting stack number from symbol table
 												int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s1] -> get_stack_pointer() );
+												//generating stack label from stack number
 												std::string stack_label = std::to_string(static_cast<long long>(stack_num));
+												// generating new label
 												s1 = stack_sign + stack_label;
 											}
 										}
 										else{
+											// if not true generate a new temporary
 											s1 = $1->get_temp_count();
 										}
+										// check if operand 3 has node type name value
 										if($3->get_node_type() == name_value){
+											// if true assign s2 operand 3 name value
 											s2 = $3->get_name();
+											// check for func_var_map s2
 											if (func_var_map[s2])
 											{
+												// getting stack number for symbol table
 												int stack_num = ( (SymTabHead[SymTabHead.size() - 1]->get_tab())[s2] -> get_stack_pointer() );
+												// generating stack label for stack number
 												std::string stack_label = std::to_string(static_cast<long long>(stack_num));
+												// generating new label
 												s2 = stack_sign + stack_label;
 											}
 										}
 										else{
+											// if not true generate new temporary
 											s2 = $3->get_temp_count();
 										}
+										// assign cmp type based on operand data type
+										// if int cmp_type = 0
 										if($1->get_int_or_float() == true){
 											cmp_type = 0;
 										}
+										// if float cmp type = 1
 										else if($1->get_int_or_float() == false){
 											cmp_type = 1;
 										}
@@ -1045,19 +1073,25 @@ cond:			expr compop expr{
 									else{
 										//compare different type data
 									}
+									// getting jump label from label_counter head
 									std::string jump_label = std::to_string(static_cast<long long>(label_counter.top()));
+									// assign jump_s variable
 									std::string jump_s = lable_name + jump_label;
+									// generating IR code for compare operation
 									std::IR_code * cond_IR = new IR_code(compop_str, s1, s2, jump_s, cmp_type);
+									// pushing IR code to IR vector
 									IR_vector.push_back(cond_IR);
 
 };
 
-compop:			TOKEN_OP_LESS{$$ = TOKEN_OP_LESS;}
-			|	TOKEN_OP_GREATER{$$ = TOKEN_OP_GREATER;}
-			|	TOKEN_OP_EQ{$$ = TOKEN_OP_EQ;}
-			|	TOKEN_OP_NEQ{$$ = TOKEN_OP_NEQ;}
-			|	TOKEN_OP_LE{$$ = TOKEN_OP_LE;}
-			|	TOKEN_OP_GE{$$ = TOKEN_OP_GE;};
+// grammer for compop
+// assignment operation for given operands
+compop:			TOKEN_OP_LESS{$$ = TOKEN_OP_LESS; // assignment operation for given operand}
+			|	TOKEN_OP_GREATER{$$ = TOKEN_OP_GREATER; // assignment operation for given operand}
+			|	TOKEN_OP_EQ{$$ = TOKEN_OP_EQ; // assignment operation for given operand}
+			|	TOKEN_OP_NEQ{$$ = TOKEN_OP_NEQ; // assignment operation for given operand}
+			|	TOKEN_OP_LE{$$ = TOKEN_OP_LE; // assignment operation for given operand}
+			|	TOKEN_OP_GE{$$ = TOKEN_OP_GE; // assignment operation for given operand};
 
 init_stmt:		assign_expr{
 							if(($1->get_right_node())->get_int_or_float() == ($1->get_left_node())->get_int_or_float()){
