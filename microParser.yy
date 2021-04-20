@@ -246,12 +246,12 @@ func_decl:	TOKEN_FUNCTION any_type id {
 		func_type_map[*($3)] = false;
 	}
 	// generating rest of function body
-	}TOKEN_OP_LP{param_counter = 1; local_counter = 0;} 
-	// grammer for parameter list
-	param_decl_list TOKEN_OP_RP 
-	// function body beginning
-	TOKEN_BEGIN func_body 
-	// exiting function and thus setting in_function variable to false
+	}TOKEN_OP_LP{param_counter = 1; local_counter = 0;
+	// grammer for parameter list} 
+	param_decl_list TOKEN_OP_RP {
+	// function body beginning}
+	TOKEN_BEGIN func_body{ 
+	// exiting function and thus setting in_function variable to false}
 	TOKEN_END{in_function = false;};
 
 // grammer for function body declaration
