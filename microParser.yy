@@ -1,5 +1,7 @@
 %{
-	//Acknowledgement: Qifan Chang and Zixian Lai
+// Acknowledgement: https://github.com/laizixian/ECE468
+// Acknowlegdement for documentation Shivam, Brinal, Rutik and Mehul
+
 	#include <stdio.h>
 	#include <iostream>
 	#include <string>
@@ -284,11 +286,14 @@ func_decl:	TOKEN_FUNCTION any_type id {
 	}
 	// generating rest of function body
 	}TOKEN_OP_LP{param_counter = 1; local_counter = 0;
-	// grammer for parameter list} 
+	// grammer for parameter list
+	} 
 	param_decl_list TOKEN_OP_RP {
-	// function body beginning}
+	// function body beginning
+	}
 	TOKEN_BEGIN func_body{ 
-	// exiting function and thus setting in_function variable to false}
+	// exiting function and thus setting in_function variable to false
+	}
 	TOKEN_END{in_function = false;};
 
 // grammer for function body declaration
@@ -625,7 +630,7 @@ expr_prefix:	expr_prefix factor addop{
 factor:			factor_prefix postfix_expr{
 											// checking if first operand is null
 											if ($1 == NULL){
-											assign result as second operand as first operand is null
+											//assign result as second operand as first operand is null
 												$$ = $2;
 											}
 											else{
@@ -1071,12 +1076,18 @@ cond:			expr compop expr{
 
 // grammer for compop
 // assignment operation for given operands
-compop:			TOKEN_OP_LESS{$$ = TOKEN_OP_LESS; // assignment operation for given operand}
-			|	TOKEN_OP_GREATER{$$ = TOKEN_OP_GREATER; // assignment operation for given operand}
-			|	TOKEN_OP_EQ{$$ = TOKEN_OP_EQ; // assignment operation for given operand}
-			|	TOKEN_OP_NEQ{$$ = TOKEN_OP_NEQ; // assignment operation for given operand}
-			|	TOKEN_OP_LE{$$ = TOKEN_OP_LE; // assignment operation for given operand}
-			|	TOKEN_OP_GE{$$ = TOKEN_OP_GE; // assignment operation for given operand};
+compop:			TOKEN_OP_LESS{$$ = TOKEN_OP_LESS; // assignment operation for given operand
+}
+			|	TOKEN_OP_GREATER{$$ = TOKEN_OP_GREATER; // assignment operation for given operand
+			}
+			|	TOKEN_OP_EQ{$$ = TOKEN_OP_EQ; // assignment operation for given operand
+			}
+			|	TOKEN_OP_NEQ{$$ = TOKEN_OP_NEQ; // assignment operation for given operand
+			}
+			|	TOKEN_OP_LE{$$ = TOKEN_OP_LE; // assignment operation for given operand
+			}
+			|	TOKEN_OP_GE{$$ = TOKEN_OP_GE; // assignment operation for given operand
+			};
 
 init_stmt:		assign_expr{
 							//Check if both sides of the assignment statement have same type
