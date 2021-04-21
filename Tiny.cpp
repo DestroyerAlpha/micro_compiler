@@ -356,7 +356,7 @@ namespace std{
 
 			// If operator type is UNLINK, print "unlnk"
 			else if( curr_op_type == "UNLINK"){
-				cout << "unlink" << endl;
+				cout << "unlnk" << endl;
 			}
 
 			// If operator type is JSR, print jsr result of 3ac

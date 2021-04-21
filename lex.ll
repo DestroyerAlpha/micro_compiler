@@ -1,6 +1,7 @@
 %{
 //Acknowledgement: Qifan Chang and Zixian Lai
-// Documentation by Shivam, Brinal and Akhilesh
+// acknowlegdement for documentation Shivam, Brinal, Rutik and Mehul
+
 #include <string>
 #include <vector>
 #include "main.h"

@@ -1,6 +1,11 @@
 %{
+<<<<<<< HEAD
 // Acknowledgement: Qifan Chang and Zixian Lai
 // Documentation by Shivam, Brinal and Mehul
+=======
+// Acknowledgement: https://github.com/laizixian/ECE468
+// Acknowlegdement for documentation Shivam, Brinal, Rutik and Mehul
+>>>>>>> 5286a381880168aec11f22671cebb3bbdfc86778
 
 	#include <stdio.h>
 	#include <iostream>
